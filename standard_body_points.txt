@@ -1,0 +1,15 @@
+0 - forehead
+1 - upper chest
+2 - right shoulder
+3 - right elbow
+4 - right wrist
+5 - left shoulder
+6 - left elbow
+7 - left wrist
+8 - navel
+9 - right hip
+10 - right knee
+11 - right ankle
+12 - left hip
+13 - left knee
+14 - left ankle
