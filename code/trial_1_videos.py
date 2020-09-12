@@ -104,7 +104,7 @@ def new_vid_name(org_vid_path):
 
 # my_video = "../inputs_outputs/videos/vertical_jump_side_trial_1.mp4"
 my_video = input("Provide the video filepath as a string.\n\n")
-print("\n\n")
+print("\n")
 
 
 # In[14]:
@@ -115,7 +115,7 @@ orient = input("Is the person in the video facing towards left or right of the v
 orient = orient.lower()
 
 
-print("\n\nPROCESSING... PLEASE WAIT!\n\n")
+print("\n\nPROCESSING... PLEASE WAIT!\n\n\n")
 
 
 # In[6]:
@@ -190,13 +190,6 @@ df = video_points_df.T.copy()
 
 
 # ## Data Imputation
-
-# In[14]:
-
-
-# orient = "left"
-orient = input("Is the person in the video facing left or right of the frame?")
-orient = orient.lower()
 
 
 # In[15]:
@@ -420,7 +413,55 @@ origin_point = 0
 # In[28]:
 
 
+def find_max_body_dimensions():
+    
+    max_body_dim_x = 0
+    max_body_dim_y = 0
+    
+    for i in df.index:
+        
+        if df.loc[i, origin_point] != None:
+        
+            origin_x, origin_y = df.loc[i, origin_point]
+
+            for p in [point for point in vjump_points if point != origin_point]:
+
+                if df.loc[i, p] != None:
+
+                    p_x, p_y = df.loc[i, p]
+
+                    diff_x = abs(p_x - origin_x)
+                    diff_y = abs(p_y - origin_y)
+
+                    if diff_x > max_body_dim_x:
+                        max_body_dim_x = diff_x
+                    if diff_y > max_body_dim_y:
+                        max_body_dim_y = diff_y
+    
+    return max_body_dim_x, max_body_dim_y
+
+def find_upper_body_length():
+    
+    upper_body_length = 0
+    
+    for i in df.index:
+        
+        if ((df.loc[i, 1] != None) and (df.loc[i, 8] != None)):
+            
+            upper_chest_x, upper_chest_y = df.loc[i, 1]
+            navel_x, navel_y = df.loc[i, 8]
+            
+            upper_body_length = int(round(np.sqrt((upper_chest_x - navel_x)**2 + (upper_chest_y - navel_y)**2)))
+            
+            break
+            
+    # print(upper_body_length)
+    return upper_body_length
+
 def normalizing_body_points(row):
+    
+    # max_body_dim_x, max_body_dim_y = find_max_body_dimensions()
+    upper_body_length = find_upper_body_length()
     
     if row[origin_point] == None:
         return row
@@ -439,8 +480,8 @@ def normalizing_body_points(row):
         
         else:
             i_x, i_y = row[i]
-            norm_x = (i_x - origin_x) / frame_width
-            norm_y = (i_y - origin_y) / frame_height
+            norm_x = (i_x - origin_x) / (upper_body_length * 3)
+            norm_y = (i_y - origin_y) / (upper_body_length * 3)
             norm_y = -1 * norm_y
             row[i] = (norm_x, norm_y)
     
