@@ -57,17 +57,37 @@ def main(argv):
         #print ("Input file is: ", input_file)
         #print ("Orientation is: ", orient)
         
+        #Load the models 
+        protoFile = "../inputs_outputs/models/pose_deploy.prototxt"
+        weightsFile = "../inputs_outputs/models/pose_iter_584000.caffemodel"
+
+        #get the skeleton points for each frame in the video 
+        df = get_video_points()
+
+# Read the network into Memory
+net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+
         #Count the total frames
         total_frames = count_frames(my_video)
         print ('Total {} frames'.format(str(total_frames)))
 
         
-        #Report the status of the tables
-        
-        #Insert the data
+        #Analysing Frames
+
+
+
+        #Impute missing pose points  
+
+
+        #Normalize the pose points
+
+
+        #Identify critical frames 
+
+
+        #Writing the output text file and video 
 
         
-        #Report DB Status
         
         
 	
