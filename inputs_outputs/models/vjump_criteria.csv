@@ -1,0 +1,10 @@
+frame,criteria_description,condition,min_value,max_value
+SQUAT POSTURE ANGLES,Elbow angle,>=,160.0,
+SQUAT POSTURE ANGLES,Knee angle,"[ , ]",75.0,105.0
+SQUAT POSTURE ANGLES,Shoulder angle,,,
+SQUAT POSTURE ANGLES,Hip angle,,,
+JUMP PEAK POSTURE ANGLES,Elbow angle,>=,150.0,
+JUMP PEAK POSTURE ANGLES,Knee angle,>=,150.0,
+JUMP PEAK POSTURE ANGLES,Torso leaning angle,<=,,20.0
+LANDING POSTURE ANGLES,Knee angle,<=,,150.0
+LANDING POSTURE ANGLES,Torso leaning angle,<=,,10.0

@@ -521,7 +521,7 @@ class VJump():
 		logging.debug(f"\t- {frame_text}")
 
 		report_text = f'''
-		{frame_text} (frame {frame_counter} of {total_frames})
+		{frame_text} (frame {frame_counter} of {self.total_frames})
 		Body angles:
 		\tElbow:\t{round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}
 		\tKnee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}
@@ -669,7 +669,7 @@ class VJump():
 		logging.debug(f"\t- {frame_text}")
 		
 		report_text = f'''
-		{frame_text} (frame {frame_counter} of {total_frames})
+		{frame_text} (frame {frame_counter} of {self.total_frames})
 		Body angles:
 		\tElbow:\t{round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}
 		\tKnee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}
@@ -826,7 +826,7 @@ class VJump():
 		logging.debug(f"\t- {frame_text}")
 		
 		report_text = f'''
-		{frame_text} (frame {frame_counter} of {total_frames})
+		{frame_text} (frame {frame_counter} of {self.total_frames})
 		Body angles:
 		\tKnee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}
 		\tTorso:\t{round(torso_leaning_angle, 2)} deg\t{torso_leaning_angle_criteria_text}

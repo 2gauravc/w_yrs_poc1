@@ -1,0 +1,111 @@
+30-Sep-20 17:16:17 - DEBUG - ----- MAIN PROGRAM STARTED -----
+
+30-Sep-20 17:16:22 - DEBUG - Video path given by user: 'C:\Users\USER\Documents\Python Scripts\wonder_years_fitness_ai\w_yrs_poc1\inputs_outputs\videos\vertical_jump_side_trial_1.mp4'.
+30-Sep-20 17:16:22 - DEBUG - Attempt 1 - video accessed successfully.
+30-Sep-20 17:16:26 - DEBUG - Orientation given by user: 'left'.
+30-Sep-20 17:16:26 - DEBUG - Orientation 'left' accepted as input.
+30-Sep-20 17:16:26 - DEBUG - VJump object successfully created.
+30-Sep-20 17:16:26 - DEBUG - Starting to count total frames.
+30-Sep-20 17:16:27 - DEBUG - Total frames in video = 67
+30-Sep-20 17:16:27 - DEBUG - Starting to import body net model files.
+30-Sep-20 17:16:27 - DEBUG - Successfully imported body net model files.
+30-Sep-20 17:16:27 - DEBUG - Starting to locate body points in video.
+30-Sep-20 17:16:27 - DEBUG - Locating body points - frame 1 of 67.
+30-Sep-20 17:16:40 - DEBUG - Locating body points - frame 2 of 67.
+30-Sep-20 17:16:58 - DEBUG - Locating body points - frame 3 of 67.
+30-Sep-20 17:17:14 - DEBUG - Locating body points - frame 4 of 67.
+30-Sep-20 17:17:28 - DEBUG - Locating body points - frame 5 of 67.
+30-Sep-20 17:17:42 - DEBUG - Locating body points - frame 6 of 67.
+30-Sep-20 17:17:57 - DEBUG - Locating body points - frame 7 of 67.
+30-Sep-20 17:18:12 - DEBUG - Locating body points - frame 8 of 67.
+30-Sep-20 17:18:26 - DEBUG - Locating body points - frame 9 of 67.
+30-Sep-20 17:18:39 - DEBUG - Locating body points - frame 10 of 67.
+30-Sep-20 17:18:51 - DEBUG - Locating body points - frame 11 of 67.
+30-Sep-20 17:19:04 - DEBUG - Locating body points - frame 12 of 67.
+30-Sep-20 17:19:16 - DEBUG - Locating body points - frame 13 of 67.
+30-Sep-20 17:19:28 - DEBUG - Locating body points - frame 14 of 67.
+30-Sep-20 17:19:40 - DEBUG - Locating body points - frame 15 of 67.
+30-Sep-20 17:19:52 - DEBUG - Locating body points - frame 16 of 67.
+30-Sep-20 17:20:05 - DEBUG - Locating body points - frame 17 of 67.
+30-Sep-20 17:20:17 - DEBUG - Locating body points - frame 18 of 67.
+30-Sep-20 17:20:29 - DEBUG - Locating body points - frame 19 of 67.
+30-Sep-20 17:20:42 - DEBUG - Locating body points - frame 20 of 67.
+30-Sep-20 17:20:54 - DEBUG - Locating body points - frame 21 of 67.
+30-Sep-20 17:21:06 - DEBUG - Locating body points - frame 22 of 67.
+30-Sep-20 17:21:19 - DEBUG - Locating body points - frame 23 of 67.
+30-Sep-20 17:21:31 - DEBUG - Locating body points - frame 24 of 67.
+30-Sep-20 17:21:43 - DEBUG - Locating body points - frame 25 of 67.
+30-Sep-20 17:21:55 - DEBUG - Locating body points - frame 26 of 67.
+30-Sep-20 17:22:07 - DEBUG - Locating body points - frame 27 of 67.
+30-Sep-20 17:22:19 - DEBUG - Locating body points - frame 28 of 67.
+30-Sep-20 17:22:31 - DEBUG - Locating body points - frame 29 of 67.
+30-Sep-20 17:22:45 - DEBUG - Locating body points - frame 30 of 67.
+30-Sep-20 17:22:56 - DEBUG - Locating body points - frame 31 of 67.
+30-Sep-20 17:23:09 - DEBUG - Locating body points - frame 32 of 67.
+30-Sep-20 17:23:21 - DEBUG - Locating body points - frame 33 of 67.
+30-Sep-20 17:23:33 - DEBUG - Locating body points - frame 34 of 67.
+30-Sep-20 17:23:45 - DEBUG - Locating body points - frame 35 of 67.
+30-Sep-20 17:23:57 - DEBUG - Locating body points - frame 36 of 67.
+30-Sep-20 17:24:09 - DEBUG - Locating body points - frame 37 of 67.
+30-Sep-20 17:24:22 - DEBUG - Locating body points - frame 38 of 67.
+30-Sep-20 17:24:34 - DEBUG - Locating body points - frame 39 of 67.
+30-Sep-20 17:24:46 - DEBUG - Locating body points - frame 40 of 67.
+30-Sep-20 17:24:58 - DEBUG - Locating body points - frame 41 of 67.
+30-Sep-20 17:25:11 - DEBUG - Locating body points - frame 42 of 67.
+30-Sep-20 17:25:23 - DEBUG - Locating body points - frame 43 of 67.
+30-Sep-20 17:25:35 - DEBUG - Locating body points - frame 44 of 67.
+30-Sep-20 17:25:47 - DEBUG - Locating body points - frame 45 of 67.
+30-Sep-20 17:25:59 - DEBUG - Locating body points - frame 46 of 67.
+30-Sep-20 17:26:12 - DEBUG - Locating body points - frame 47 of 67.
+30-Sep-20 17:26:24 - DEBUG - Locating body points - frame 48 of 67.
+30-Sep-20 17:26:41 - DEBUG - Locating body points - frame 49 of 67.
+30-Sep-20 17:26:56 - DEBUG - Locating body points - frame 50 of 67.
+30-Sep-20 17:27:10 - DEBUG - Locating body points - frame 51 of 67.
+30-Sep-20 17:27:24 - DEBUG - Locating body points - frame 52 of 67.
+30-Sep-20 17:27:40 - DEBUG - Locating body points - frame 53 of 67.
+30-Sep-20 17:27:54 - DEBUG - Locating body points - frame 54 of 67.
+30-Sep-20 17:28:08 - DEBUG - Locating body points - frame 55 of 67.
+30-Sep-20 17:28:21 - DEBUG - Locating body points - frame 56 of 67.
+30-Sep-20 17:28:35 - DEBUG - Locating body points - frame 57 of 67.
+30-Sep-20 17:28:49 - DEBUG - Locating body points - frame 58 of 67.
+30-Sep-20 17:29:04 - DEBUG - Locating body points - frame 59 of 67.
+30-Sep-20 17:29:18 - DEBUG - Locating body points - frame 60 of 67.
+30-Sep-20 17:29:33 - DEBUG - Locating body points - frame 61 of 67.
+30-Sep-20 17:29:47 - DEBUG - Locating body points - frame 62 of 67.
+30-Sep-20 17:30:02 - DEBUG - Locating body points - frame 63 of 67.
+30-Sep-20 17:30:17 - DEBUG - Locating body points - frame 64 of 67.
+30-Sep-20 17:30:32 - DEBUG - Locating body points - frame 65 of 67.
+30-Sep-20 17:30:47 - DEBUG - Locating body points - frame 66 of 67.
+30-Sep-20 17:31:01 - DEBUG - Locating body points - frame 67 of 67.
+30-Sep-20 17:31:16 - DEBUG - Successfully located body points in video.
+30-Sep-20 17:31:16 - DEBUG - Starting to identify critical frames in video.
+30-Sep-20 17:31:16 - DEBUG - Successfully identified critical frames in video.
+30-Sep-20 17:31:16 - DEBUG - Squat posture frame = 21
+30-Sep-20 17:31:16 - DEBUG - Jump Peak posture frame = 39
+30-Sep-20 17:31:16 - DEBUG - Landing posture frame = 52
+30-Sep-20 17:31:16 - DEBUG - Starting to access vertical jump success criteria file.
+30-Sep-20 17:31:16 - DEBUG - Successfully accessed vertical jump success criteria file.
+30-Sep-20 17:31:16 - DEBUG - Starting to assess need for data imputation in critical frames.
+30-Sep-20 17:31:16 - DEBUG - Starting adjustment of critical frames to nearby frames to avoid data imputation.
+30-Sep-20 17:31:16 - DEBUG - UNADJUSTED Squat posture: frame 21
+30-Sep-20 17:31:16 - DEBUG - Nearby frames also have missing data. NEED TO IMPUTE squat posture frame.
+30-Sep-20 17:31:16 - DEBUG - Successfully assessed need for data imputation. Imputation NEEDED.
+30-Sep-20 17:31:16 - DEBUG - Starting to perform data imputation for all frames in the video.
+30-Sep-20 17:31:16 - DEBUG - Successfully performed data imputation.
+30-Sep-20 17:31:16 - DEBUG - Starting to analyse video according to vjump criteria.
+30-Sep-20 17:31:16 - DEBUG - Video analysis started.
+30-Sep-20 17:31:16 - DEBUG - Analysing video - frame 1 of 67.
+30-Sep-20 17:31:16 - DEBUG - 	- Drawing all body points and frame number.
+30-Sep-20 17:31:16 - ERROR - EXCEPTION OCCURED - Unable to analyse video. Program will be TERMINATED.
+Traceback (most recent call last):
+  File "C:\Users\USER\Documents\Python Scripts\wonder_years_fitness_ai\w_yrs_poc1\code\main_program.py", line 139, in run_vjump_analysis
+    my_video.analyse_vjump_video()
+  File "C:\Users\USER\Documents\Python Scripts\wonder_years_fitness_ai\w_yrs_poc1\code\VJump\VJump.py", line 950, in analyse_vjump_video
+    skeleton_frame = self.overlay_imputed_skeleton(frame, frame_counter, self.df_vid_points.loc[frame_counter], self.df_vid_points_imputed.loc[frame_counter])
+  File "C:\Users\USER\Documents\Python Scripts\wonder_years_fitness_ai\w_yrs_poc1\code\VJump\VJump.py", line 851, in overlay_imputed_skeleton
+    cv2.putText(frame_copy, f"frame = {frame_counter}", (10, frame_height-10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 3, lineType=cv2.LINE_AA)
+NameError: name 'frame_height' is not defined
+30-Sep-20 17:31:26 - DEBUG - ----- MAIN PROGRAM FINISHED -----
+
+
+

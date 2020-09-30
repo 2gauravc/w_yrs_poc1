@@ -1,0 +1,23 @@
+VERTICAL JUMP REPORT
+Video Path : C:\Users\Priyanka\Priyanka 2020\Kids Fitness\Kids Fitness AI\Git Hub\w_yrs_poc1-master (1)\w_yrs_poc1-master\inputs_outputs\videos\VID_20200921_195947_video.mp4
+
+    Squat posture : FAIL (frame 9 of 73)
+    Body angles:
+    	Elbow:	155.58 deg	[correct range: >160 deg]
+    	Knee:	121.78 deg	[correct range: 75-105 deg]
+    	Shldr:	19.08 deg
+    	Hip:	121.78 deg
+    
+    Jump Peak posture : FAIL (frame 37 of 73)
+    Body angles:
+    	Elbow:	112.3 deg	[correct range: >150 deg]
+    	Knee:	170.86 deg	[correct range: >150 deg]
+    	Torso:	81.53 deg	[correct range: <20 deg]
+    
+    Landing posture : FAIL (frame 63 of 73)
+    Body angles:
+    	Knee:	101.58 deg	[correct range: <150 deg]
+    	Torso:	58.39 deg	[correct range: <10 deg]
+    
+    Landing distance: 0.07 X Upper Body length [correct range: <=1]
+    
