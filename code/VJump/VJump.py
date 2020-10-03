@@ -270,8 +270,11 @@ class VJump():
 		need_to_impute = False
 		
 		logging.debug(f"Starting adjustment of critical frames to nearby frames to avoid data imputation.")
-
-		jump_squat_frame_adjusters = [0, -1, 1, -2, 2]
+		if (self.jump_squat_frame >=2) and ((self.total_frames-self.jump_squat_frame) >=2):
+                        jump_squat_frame_adjusters = [0, -1, 1, -2, 2]
+		else:
+                        jump_squat_frame_adjusters = [0]
+		
 		temp_frame = self.jump_squat_frame
 		
 		for adj in jump_squat_frame_adjusters:
@@ -286,8 +289,11 @@ class VJump():
 				logging.debug(f"UNADJUSTED Squat posture: frame {self.jump_squat_frame}")
 				logging.debug(f"Nearby frames also have missing data. NEED TO IMPUTE squat posture frame.")
 				return need_to_impute
-			
-		jump_peak_frame_adjusters = [0, -1, 1, -2, 2]
+	        		
+		if (self.jump_peak_frame >=2) and ((self.total_frames-self.jump_peak_frame) >=2): 
+                    jump_peak_frame_adjusters = [0, -1, 1, -2, 2]
+		else:
+                    jump_peak_frame_adjusters = [0]
 		temp_frame = self.jump_peak_frame
 		
 		for adj in jump_peak_frame_adjusters:
@@ -303,7 +309,11 @@ class VJump():
 				logging.debug(f"Nearby frames also have missing data. NEED TO IMPUTE jump peak posture frame.")
 				return need_to_impute
 			
-		jump_land_frame_adjusters = [0, -1, 1, -2, 2]
+		if (self.jump_land_frame >=2) and ((self.total_frames-self.jump_land_frame) >=2): 
+                    jump_land_frame_adjusters = [0, -1, 1, -2, 2]
+		else:
+                    jump_land_frame_adjusters = [0]
+		
 		temp_frame = self.jump_land_frame
 		
 		for adj in jump_land_frame_adjusters:
