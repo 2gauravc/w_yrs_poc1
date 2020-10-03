@@ -133,6 +133,12 @@ def run_vjump_analysis():
 		my_video.impute_missing_body_points()
 		logging.debug(f"Successfully performed data imputation.")
 
+        if my_video.need_to_impute_critical_frames() == True:
+                print ("Null values in critical frames after imputation. Imputation failed for unknown reasons. Exiting")
+                logging.debug(f"Null values in critical frames after imputation.Imputation failed for unknwon reasons.Exiting")
+                time.sleep(10)
+                return
+
 	try:
 		print("Analysing video according to vertical jump criteria...")
 		logging.debug(f"Starting to analyse video according to vjump criteria.")
