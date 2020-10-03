@@ -200,11 +200,13 @@ class VJump():
 	def import_vjump_criteria(self):
 		
 		try:
-			df_vjump_criteria = pd.read_csv("../inputs_outputs/models/vjump_criteria.csv")
+			df_vjump_criteria = pd.read_csv("../inputs_outputs/vjump_criteria.csv")
 			df_vjump_criteria["condition"].fillna(value="", inplace=True)
+			logging.debug(f"Success criteria CSV file FOUND.")
 		
 		except:
 			print("Error importing jump criteria file. Reverting to default criteria.")
+			logging.debug(f"Success criteria CSV file NOT FOUND. Reverting to default criteria.")
 			
 			vjump_default_criteria_dict = {'frame': {0: 'SQUAT POSTURE ANGLES',
 													 1: 'SQUAT POSTURE ANGLES',
@@ -254,7 +256,7 @@ class VJump():
 										  }
 			
 			df_vjump_criteria = pd.DataFrame(vjump_default_criteria_dict)
-			df_vjump_criteria.to_csv("../inputs_outputs/models/vjump_criteria.csv", index=False)
+			df_vjump_criteria.to_csv("../inputs_outputs/vjump_criteria.csv", index=False)
 					
 		self.df_vjump_criteria = df_vjump_criteria
 	
@@ -269,13 +271,13 @@ class VJump():
 			
 		need_to_impute = False
 		
-		logging.debug(f"Starting adjustment of critical frames to nearby frames to avoid data imputation.")
+		logging.debug(f"Starting adjustment of critical frames to nearby frames.")
 
 		jump_squat_frame_adjusters = [0, -1, 1, -2, 2]
 		temp_frame = self.jump_squat_frame
 		
 		for adj in jump_squat_frame_adjusters:
-			if self.df_vid_points.loc[temp_frame + adj, critical_points].isna().sum() == 0:
+			if self.df_vid_points_imputed.loc[temp_frame + adj, critical_points].isna().sum() == 0:
 				self.jump_squat_frame = temp_frame + adj
 				# print(f"NEW JUMP SQUAT FRAME = {self.jump_squat_frame}")
 				logging.debug(f"ADJUSTED Squat posture: frame {self.jump_squat_frame}")
@@ -291,7 +293,7 @@ class VJump():
 		temp_frame = self.jump_peak_frame
 		
 		for adj in jump_peak_frame_adjusters:
-			if self.df_vid_points.loc[temp_frame + adj, critical_points].isna().sum() == 0:
+			if self.df_vid_points_imputed.loc[temp_frame + adj, critical_points].isna().sum() == 0:
 				self.jump_peak_frame = temp_frame + adj
 				# print(f"NEW JUMP PEAK FRAME = {self.jump_peak_frame}")
 				logging.debug(f"ADJUSTED Jump Peak posture: frame {self.jump_peak_frame}")
@@ -307,7 +309,7 @@ class VJump():
 		temp_frame = self.jump_land_frame
 		
 		for adj in jump_land_frame_adjusters:
-			if self.df_vid_points.loc[temp_frame + adj, critical_points].isna().sum() == 0:
+			if self.df_vid_points_imputed.loc[temp_frame + adj, critical_points].isna().sum() == 0:
 				self.jump_land_frame = temp_frame + adj
 				# print(f"NEW JUMP LAND FRAME = {self.jump_land_frame}")
 				logging.debug(f"ADJUSTED Landing posture: frame {self.jump_land_frame}")
@@ -407,18 +409,18 @@ class VJump():
 		if elbow_angle_condition == "":
 			elbow_angle_pass = True
 		elif elbow_angle_condition == ">=":
+			elbow_angle_criteria_text = f"[correct range: >={elbow_min_angle} deg]"
 			if elbow_angle >= elbow_min_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: >={elbow_min_angle} deg]"
 		elif elbow_angle_condition == "<=":
+			elbow_angle_criteria_text = f"[correct range: <={elbow_max_angle} deg]"
 			if elbow_angle <= elbow_max_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: <={elbow_max_angle} deg]"
 		elif elbow_angle_condition == "[ , ]":
+			elbow_angle_criteria_text = f"[correct range: {elbow_min_angle}-{elbow_max_angle} deg]"
 			if elbow_min_angle <= elbow_angle <= elbow_max_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: {elbow_min_angle}-{elbow_max_angle} deg]"
-		logging.debug(f"\t- Elbow:\t{round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}")
+		logging.debug(f"\t- Elbow: {round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging knee angle.")
 		knee_angle_condition = df_squat_criteria[df_squat_criteria["criteria_description"]=="Knee angle"]["condition"].tolist()[0]
@@ -429,18 +431,18 @@ class VJump():
 		if knee_angle_condition == "":
 			knee_angle_pass = True
 		elif knee_angle_condition == ">=":
+			knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 			if knee_angle >= knee_min_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 		elif knee_angle_condition == "<=":
+			knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 			if knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 		elif knee_angle_condition == "[ , ]":
+			knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
 			if knee_min_angle <= knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
-		logging.debug(f"\t- Knee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")
+		logging.debug(f"\t- Knee: {round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging shoulder angle.")
 		shoulder_angle_condition = df_squat_criteria[df_squat_criteria["criteria_description"]=="Shoulder angle"]["condition"].tolist()[0]
@@ -451,18 +453,18 @@ class VJump():
 		if shoulder_angle_condition == "":
 			shoulder_angle_pass = True
 		elif shoulder_angle_condition == ">=":
+			shoulder_angle_criteria_text = f"[correct range: >={shoulder_min_angle} deg]"
 			if shoulder_angle >= shoulder_min_angle:
 				shoulder_angle_pass = True
-				shoulder_angle_criteria_text = f"[correct range: >={shoulder_min_angle} deg]"
 		elif shoulder_angle_condition == "<=":
+			shoulder_angle_criteria_text = f"[correct range: <={shoulder_max_angle} deg]"
 			if shoulder_angle <= shoulder_max_angle:
 				shoulder_angle_pass = True
-				shoulder_angle_criteria_text = f"[correct range: <={shoulder_max_angle} deg]"
 		elif shoulder_angle_condition == "[ , ]":
+			shoulder_angle_criteria_text = f"[correct range: {shoulder_min_angle}-{shoulder_max_angle} deg]"
 			if shoulder_min_angle <= shoulder_angle <= shoulder_max_angle:
 				shoulder_angle_pass = True
-				shoulder_angle_criteria_text = f"[correct range: {shoulder_min_angle}-{shoulder_max_angle} deg]"
-		logging.debug(f"\t- Shldr:\t{round(shoulder_angle, 2)} deg\t{shoulder_angle_criteria_text}")
+		logging.debug(f"\t- Shldr: {round(shoulder_angle, 2)} deg\t{shoulder_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging hip angle.")
 		hip_angle_condition = df_squat_criteria[df_squat_criteria["criteria_description"]=="Hip angle"]["condition"].tolist()[0]
@@ -473,18 +475,18 @@ class VJump():
 		if hip_angle_condition == "":
 			hip_angle_pass = True
 		elif hip_angle_condition == ">=":
+			hip_angle_criteria_text = f"[correct range: >={hip_min_angle} deg]"
 			if hip_angle >= hip_min_angle:
 				hip_angle_pass = True
-				hip_angle_criteria_text = f"[correct range: >={hip_min_angle} deg]"
 		elif hip_angle_condition == "<=":
+			hip_angle_criteria_text = f"[correct range: <={hip_max_angle} deg]"
 			if hip_angle <= hip_max_angle:
 				hip_angle_pass = True
-				hip_angle_criteria_text = f"[correct range: <={hip_max_angle} deg]"
 		elif hip_angle_condition == "[ , ]":
+			hip_angle_criteria_text = f"[correct range: {hip_min_angle}-{hip_max_angle} deg]"
 			if hip_min_angle <= hip_angle <= hip_max_angle:
 				hip_angle_pass = True
-				hip_angle_criteria_text = f"[correct range: {hip_min_angle}-{hip_max_angle} deg]"
-		logging.debug(f"\t- Hip:\t{round(hip_angle, 2)} deg\t{hip_angle_criteria_text}")
+		logging.debug(f"\t- Hip: {round(hip_angle, 2)} deg\t{hip_angle_criteria_text}")
 		
 		logging.debug(f"\t- Drawing red lines indicating any incorrect squat posture.")
 
@@ -560,7 +562,7 @@ class VJump():
 															   points_row_imputed[knee_angle_points[2]]
 															  )
 
-		torso_leaning_angle = self.calculate_angle_between_three_points((points_row_imputed[torso_leaning_angle_points[0]][0], points_row_imputed[torso_leaning_angle_points[0]][1] - 10),
+		torso_leaning_angle = self.calculate_angle_between_three_points((points_row_imputed[torso_leaning_angle_points[0]][0], points_row_imputed[torso_leaning_angle_points[0]][1] + 10),
 																		points_row_imputed[torso_leaning_angle_points[1]],
 																		points_row_imputed[torso_leaning_angle_points[2]]
 																	   )
@@ -580,18 +582,18 @@ class VJump():
 		if elbow_angle_condition == "":
 			elbow_angle_pass = True
 		elif elbow_angle_condition == ">=":
+			elbow_angle_criteria_text = f"[correct range: >={elbow_min_angle} deg]"
 			if elbow_angle >= elbow_min_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: >={elbow_min_angle} deg]"
 		elif elbow_angle_condition == "<=":
+			elbow_angle_criteria_text = f"[correct range: <={elbow_max_angle} deg]"
 			if elbow_angle <= elbow_max_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: <={elbow_max_angle} deg]"
 		elif elbow_angle_condition == "[ , ]":
+			elbow_angle_criteria_text = f"[correct range: {elbow_min_angle}-{elbow_max_angle} deg]"
 			if elbow_min_angle <= elbow_angle <= elbow_max_angle:
 				elbow_angle_pass = True
-				elbow_angle_criteria_text = f"[correct range: {elbow_min_angle}-{elbow_max_angle} deg]"
-		logging.debug(f"\t- Elbow:\t{round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}")
+		logging.debug(f"\t- Elbow: {round(elbow_angle, 2)} deg\t{elbow_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging knee angle.")
 		knee_angle_condition = df_peak_criteria[df_peak_criteria["criteria_description"]=="Knee angle"]["condition"].tolist()[0]
@@ -602,18 +604,18 @@ class VJump():
 		if knee_angle_condition == "":
 			knee_angle_pass = True
 		elif knee_angle_condition == ">=":
+			knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 			if knee_angle >= knee_min_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 		elif knee_angle_condition == "<=":
+			knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 			if knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 		elif knee_angle_condition == "[ , ]":
+			knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
 			if knee_min_angle <= knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
-		logging.debug(f"\t- Knee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")
+		logging.debug(f"\t- Knee: {round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging torso leaning angle.")
 		torso_leaning_angle_condition = df_peak_criteria[df_peak_criteria["criteria_description"]=="Torso leaning angle"]["condition"].tolist()[0]
@@ -624,18 +626,18 @@ class VJump():
 		if torso_leaning_angle_condition == "":
 			torso_leaning_angle_pass = True
 		elif torso_leaning_angle_condition == ">=":
+			torso_leaning_angle_criteria_text = f"[correct range: >={torso_leaning_min_angle} deg]"
 			if torso_leaning_angle >= torso_leaning_min_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: >={torso_leaning_min_angle} deg]"
 		elif torso_leaning_angle_condition == "<=":
+			torso_leaning_angle_criteria_text = f"[correct range: <={torso_leaning_max_angle} deg]"
 			if torso_leaning_angle <= torso_leaning_max_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: <={torso_leaning_max_angle} deg]"
 		elif torso_leaning_angle_condition == "[ , ]":
+			torso_leaning_angle_criteria_text = f"[correct range: {torso_leaning_min_angle}-{torso_leaning_max_angle} deg]"
 			if torso_leaning_min_angle <= torso_leaning_angle <= torso_leaning_max_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: {torso_leaning_min_angle}-{torso_leaning_max_angle} deg]"
-		logging.debug(f"\t- Torso:\t{round(torso_leaning_angle, 2)} deg\t{torso_leaning_angle_criteria_text}")
+		logging.debug(f"\t- Torso: {round(torso_leaning_angle, 2)} deg\t{torso_leaning_angle_criteria_text}")
 		
 		logging.debug(f"\t- Drawing red lines indicating any incorrect jump peak posture.")
 
@@ -648,10 +650,9 @@ class VJump():
 				cv2.line(frame_copy, points_row_imputed[p], points_row_imputed[knee_angle_points[i+1]], (0, 0, 255), thickness=2)
 		
 		if torso_leaning_angle_pass == False:
-			for i, p in enumerate(torso_leaning_angle_points[1:-1]):
-				cv2.line(frame_copy, points_row_imputed[p], (points_row_imputed[p][0], points_row_imputed[p][1] - 10), (0, 0, 255), thickness=2)
-				cv2.line(frame_copy, points_row_imputed[p], points_row_imputed[torso_leaning_angle_points[i+1]], (0, 0, 255), thickness=2)
-		
+			cv2.line(frame_copy, points_row_imputed[torso_leaning_angle_points[1]], points_row_imputed[torso_leaning_angle_points[2]], (0, 0, 255), thickness=2)
+			cv2.line(frame_copy, points_row_imputed[torso_leaning_angle_points[2]], (points_row_imputed[torso_leaning_angle_points[2]][0], points_row_imputed[torso_leaning_angle_points[2]][1] - 100), (0, 0, 255), thickness=2)
+			
 		logging.debug(f"\t- Drawing all body points and frame number.")
 		for i in points_row_imputed.index:
 			if points_row_imputed[i] != None:
@@ -737,7 +738,7 @@ class VJump():
 															   points_row_imputed[knee_angle_points[2]]
 															  )
 
-		torso_leaning_angle = self.calculate_angle_between_three_points((points_row_imputed[torso_leaning_angle_points[0]][0], points_row_imputed[torso_leaning_angle_points[0]][1] - 10),
+		torso_leaning_angle = self.calculate_angle_between_three_points((points_row_imputed[torso_leaning_angle_points[0]][0], points_row_imputed[torso_leaning_angle_points[0]][1] + 10),
 																		points_row_imputed[torso_leaning_angle_points[1]],
 																		points_row_imputed[torso_leaning_angle_points[2]]
 																	   )
@@ -757,18 +758,18 @@ class VJump():
 		if knee_angle_condition == "":
 			knee_angle_pass = True
 		elif knee_angle_condition == ">=":
+			knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 			if knee_angle >= knee_min_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: >={knee_min_angle} deg]"
 		elif knee_angle_condition == "<=":
+			knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 			if knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: <={knee_max_angle} deg]"
 		elif knee_angle_condition == "[ , ]":
+			knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
 			if knee_min_angle <= knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-				knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
-		logging.debug(f"\t- Knee:\t{round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")		
+		logging.debug(f"\t- Knee: {round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")		
 		
 		logging.debug(f"\t- Judging torso leaning angle.")
 		torso_leaning_angle_condition = df_land_criteria[df_land_criteria["criteria_description"]=="Torso leaning angle"]["condition"].tolist()[0]
@@ -779,18 +780,18 @@ class VJump():
 		if torso_leaning_angle_condition == "":
 			torso_leaning_angle_pass = True
 		elif torso_leaning_angle_condition == ">=":
+			torso_leaning_angle_criteria_text = f"[correct range: >={torso_leaning_min_angle} deg]"
 			if torso_leaning_angle >= torso_leaning_min_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: >={torso_leaning_min_angle} deg]"
 		elif torso_leaning_angle_condition == "<=":
+			torso_leaning_angle_criteria_text = f"[correct range: <={torso_leaning_max_angle} deg]"
 			if torso_leaning_angle <= torso_leaning_max_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: <={torso_leaning_max_angle} deg]"
 		elif torso_leaning_angle_condition == "[ , ]":
+			torso_leaning_angle_criteria_text = f"[correct range: {torso_leaning_min_angle}-{torso_leaning_max_angle} deg]"
 			if torso_leaning_min_angle <= torso_leaning_angle <= torso_leaning_max_angle:
 				torso_leaning_angle_pass = True
-				torso_leaning_angle_criteria_text = f"[correct range: {torso_leaning_min_angle}-{torso_leaning_max_angle} deg]"
-		logging.debug(f"\t- Torso:\t{round(torso_leaning_angle, 2)} deg\t{torso_leaning_angle_criteria_text}")
+		logging.debug(f"\t- Torso: {round(torso_leaning_angle, 2)} deg\t{torso_leaning_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging landing distance.")
 		land_distance = self.calculate_distance_from_squat_to_land()
@@ -805,9 +806,8 @@ class VJump():
 				cv2.line(frame_copy, points_row_imputed[p], points_row_imputed[knee_angle_points[i+1]], (0, 0, 255), thickness=2)
 		
 		if torso_leaning_angle_pass == False:
-			for i, p in enumerate(torso_leaning_angle_points[1:-1]):
-				cv2.line(frame_copy, points_row_imputed[p], (points_row_imputed[p][0], points_row_imputed[p][1] - 10), (0, 0, 255), thickness=2)
-				cv2.line(frame_copy, points_row_imputed[p], points_row_imputed[torso_leaning_angle_points[i+1]], (0, 0, 255), thickness=2)
+			cv2.line(frame_copy, points_row_imputed[torso_leaning_angle_points[1]], points_row_imputed[torso_leaning_angle_points[2]], (0, 0, 255), thickness=2)
+			cv2.line(frame_copy, points_row_imputed[torso_leaning_angle_points[2]], (points_row_imputed[torso_leaning_angle_points[2]][0], points_row_imputed[torso_leaning_angle_points[2]][1] - 100), (0, 0, 255), thickness=2)
 		
 		logging.debug(f"\t- Drawing all body points and frame number.")
 		for i in points_row_imputed.index:
@@ -967,7 +967,7 @@ class VJump():
 		cap.release()
 		out.release()
 		
-		print(f"Analysis video saved at {self.analysed_video_path}")
+		print(f"Analysis video saved at {self.analysed_video_path}\n")
 		logging.debug(f"Video analysis finished.")
 		logging.debug(f"Analysis video saved at '{self.analysed_video_path}'.")
 		
@@ -976,5 +976,5 @@ class VJump():
 		with open(self.analysed_report_path, "w") as text_file:
 			text_file.write(final_report_text)
 			
-		print(f"Analysis report saved at {self.analysed_report_path}")
-		logging.debug(f"Analysis report saved at '{self.self.analysed_report_path}'.")
+		print(f"Analysis report saved at {self.analysed_report_path}\n")
+		logging.debug(f"Analysis report saved at '{self.analysed_report_path}'.")

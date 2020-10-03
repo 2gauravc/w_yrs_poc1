@@ -3,7 +3,8 @@ import cv2
 import time
 import logging
 
-logging.basicConfig(filename="../inputs_outputs/logs/vjump_log.txt", filemode='a', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+timestr = time.strftime("%Y%m%d_%H%M%S")
+logging.basicConfig(filename=f"../inputs_outputs/logs/vjump_log_{timestr}.txt", filemode='a', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
 # logging.disable(logging.CRITICAL)
 
 def run_vjump_analysis():
@@ -131,19 +132,29 @@ def run_vjump_analysis():
 		print("Critical frames identified above have missing body points. Frames around these critical frames also have missing body points. So, these missing body points will now be imputed.\n")
 		logging.debug(f"Starting to perform data imputation for all frames in the video.")
 		my_video.impute_missing_body_points()
+		print("Successfully performed data imputation.\n")
 		logging.debug(f"Successfully performed data imputation.")
 
-	if my_video.need_to_impute_critical_frames() == True:
-                print ("Null values in critical frames after imputation. Imputation failed for unknown reasons. Exiting")
-                logging.debug(f"Null values in critical frames after imputation.Imputation failed for unknwon reasons.Exiting")
-                time.sleep(10)
-                return
+	logging.debug(f"Starting to verify if above imputation filled missing body points in critical frames.")
+	if my_video.need_to_impute_critical_frames() == False:
+		logging.debug(f"Successfully verified imputation. Missing body points in critical frames were SUCCESSFULLY IMPUTED.")
+		print("CRITICAL FRAMES ADJUSTED:")
+		print(f"Squat posture: frame {my_video.jump_squat_frame}")
+		print(f"Jump Peak posture: frame {my_video.jump_peak_frame}")
+		print(f"Landing posture: frame {my_video.jump_land_frame}\n")
+	else:
+		print("Missing body points were still found in critical frames after imputation. Imputation failed for unknown reasons. Please provide a new video.\n")
+		print("Program will exit in 10 seconds.")
+		logging.debug(f"Successfully verified imputation. Critical frames STILL HAVE MISSING BODY POINTS after imputation. Program will be TERMINATED.")
+		time.sleep(10)
+		return
 
 	try:
 		print("Analysing video according to vertical jump criteria...")
 		logging.debug(f"Starting to analyse video according to vjump criteria.")
 		my_video.analyse_vjump_video()
 		logging.debug(f"Successfully analysed video according to vjump criteria.")
+		time.sleep(10)
 	except:
 		print("Error while analysing video.\n")
 		print("Program will exit in 10 seconds.")
