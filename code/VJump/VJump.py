@@ -113,7 +113,7 @@ class VJump():
 		cap = cv2.VideoCapture(self.video_path)
 
 		# Defining a new dataframe to store the skeleton point coordinates from each frame of the video.
-		df_vid_points = pd.DataFrame(columns=list(range(1,26)))
+		df_vid_points = pd.DataFrame()
 		frame_counter = 1
 
 		while(cap.isOpened()):
