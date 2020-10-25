@@ -12,18 +12,7 @@ def find_csv_filenames( path_to_dir, suffix=".csv" ):
     filenames = listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
-def main(argv):
-
-	# Find the target folder 
-	ap = argparse.ArgumentParser()
-	ap.add_argument("--folder", required=True, help="folder with tagged files")
-	args = vars(ap.parse_args())	
-	folder = args["folder"]
-	print ("Picking up files from  {} folder".format(folder))
-	if path.isdir(folder) == False:
-		print("Folder path not found. Exiting...")
-		sys.exit(1)
-	
+def validate_tags(folder):
 	filenames = find_csv_filenames(folder)
 
 	for filename in filenames:
@@ -110,9 +99,15 @@ def main(argv):
 		print("\t{}".format(frameserr_text))
 
 
-		
-
-	
-
 if __name__ == "__main__":
-	main(sys.argv[1:])
+	# Find the target folder 
+	ap = argparse.ArgumentParser()
+	ap.add_argument("--folder", required=True, help="folder with tagged files")
+	args = vars(ap.parse_args())	
+	folder = args["folder"]
+	
+	if path.isdir(folder) == False:
+		print("Folder path not found. Exiting...")
+		sys.exit(1)
+	
+	validate_tags(folder)
