@@ -1,0 +1,10 @@
+name: env_fastai_v2
+channels:
+  - defaults
+dependencies:
+  - cudatoolkit=10.1
+  - pytorch
+  - torchvision
+  - ipywidgets
+  - ipykernel
+prefix: C:\Users\S121741\Anaconda3\envs\env_fastai_v2

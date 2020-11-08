@@ -1,0 +1,13 @@
+name: env_fastai_v2
+channels:
+  - pytorch
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - cudatoolkit=10.1
+  - pytorch
+  - torchvision
+  - ipywidgets
+  - ipykernel
+prefix:
