@@ -7,6 +7,11 @@ import logging
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import fastai
+from fastai.vision.all import *
+import pathlib
+from pathlib import Path
+
 class VJump():
 
 	def __init__(self, video_path, orientation):
@@ -48,9 +53,65 @@ class VJump():
 		cap.release()
 		
 		self.total_frames = total_frames
+		
+	def count_and_save_frames(self):
 
-		# return total_frames
+		# Source 1: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_gui/py_video_display/py_video_display.html
+		# Source 2: https://www.learnopencv.com/read-write-and-display-a-video-using-opencv-cpp-python/
 
+		# Creating a VideoCapture object.
+		cap = cv2.VideoCapture(self.video_path)
+
+		# Getting the video frame width and height.
+		self.frame_width = int(cap.get(3))
+		self.frame_height = int(cap.get(4))
+		
+		total_frames = 0
+
+		while(cap.isOpened()):
+
+			# Grabbing each individual frame, frame-by-frame.
+			ret, frame = cap.read()
+
+			if ret==True:
+
+				total_frames += 1
+				rotated_frame=ndimage.rotate(frame,270)
+				cv2.imwrite(self.create_frame_path(total_frames), rotated_frame)
+
+				# Exiting if "Q" key is pressed on the keyboard.
+				if cv2.waitKey(1) & 0xFF == ord('q'):
+					break
+
+			else:
+				break
+
+		# Releasing the VideoCapture object.
+		cap.release()
+		
+		self.total_frames = total_frames
+
+	def create_frame_path(self, frame_counter):
+		vid_path, vid_name_ext = os.path.split(self.video_path)
+		vid_name, vid_ext = os.path.splitext(vid_name_ext)
+
+		frame_path = os.path.join(vid_path, vid_name)
+		
+		if not os.path.exists(frame_path):
+			os.makedirs(frame_path)
+			
+		frame_path = os.path.join(frame_path, f"{vid_name}_FRAME_{frame_counter}.png")
+		return frame_path
+	
+	def fastai(self, model_path):
+	    pathlib.WindowsPath = pathlib.PosixPath
+		#print ("fastai: version {}".format(fastai.__version__))
+	    model_path = Path(model_path)
+	    learn_inf = load_learner(model_path)
+		#print(learn_inf.dls.vocab)
+	    print("Model Loaded")
+	    self.fastai = learn_inf
+	
 	def import_body_net(self):
 
 		# Source for code: https://www.learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/
@@ -61,7 +122,17 @@ class VJump():
 
 		# Read the network into Memory
 		self.net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
-
+	
+	def estimate_key_pose(self):
+	    #Load the image from tmp/
+	    temp_dir = '../inputs_outputs/IMG_3768'
+	    g =  get_image_files(temp_dir)
+	    
+	    #Predict the Class for each image
+	    for img in g:
+	        lbl = self.fastai.predict(img)[0]
+	        print("Image {}; Predicted Label {}".format(img, lbl))
+	
 	def find_skeleton(self, frame, frame_counter):
 
 		frame_copy = np.copy(frame)
@@ -769,7 +840,7 @@ class VJump():
 			knee_angle_criteria_text = f"[correct range: {knee_min_angle}-{knee_max_angle} deg]"
 			if knee_min_angle <= knee_angle <= knee_max_angle:
 				knee_angle_pass = True
-		logging.debug(f"\t- Knee: {round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")		
+		logging.debug(f"\t- Knee: {round(knee_angle, 2)} deg\t{knee_angle_criteria_text}")
 		
 		logging.debug(f"\t- Judging torso leaning angle.")
 		torso_leaning_angle_condition = df_land_criteria[df_land_criteria["criteria_description"]=="Torso leaning angle"]["condition"].tolist()[0]
