@@ -56,8 +56,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         my_video = VJump.VJump(video_path, orientation)
         logging.debug(f"VJump_data object successfully created.")
         
-        
-        # Start the frame by frame loop
+    
         
         ## Creating a VideoCapture object.
         cap = cv2.VideoCapture(my_video.video_path)
@@ -81,7 +80,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
 		# Load the fastai model
         my_video.fastai('../efficientnet_lite0__v4.2.pkl')
  		
-
+        # Start the frame by frame loop
+        
         while(cap.isOpened()):
 
             # Grabbing each individual frame, frame-by-frame.
@@ -99,14 +99,14 @@ def vjump_create_video_with_critical_frame_identified(argv):
                 # Detect the pose using fastai model
                 lbl = my_video.fastai.predict(rotated_frame)[0]
                 
-                # Put the Frame number and label on teh frame
+                # Put the Frame number and label on the frame
                 cv2.putText(rotated_frame, "Fr#: {}, Lbl: {}".format(num_frame, lbl), (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3, lineType=cv2.LINE_AA)
  
                  
                 out.write(rotated_frame)
 				
-                
-                # Create the new video
+                print ("Processed frame {}. Label is {}".format(num_frame, lbl))
+
                 
                 # Exiting if "Q" key is pressed on the keyboard.
                 if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -114,20 +114,31 @@ def vjump_create_video_with_critical_frame_identified(argv):
 
             else:
                 break
-
+        
+        
         # Save the attributes to VJump object
         my_video.total_frames = num_frame
         my_video.labels = lbls
 
-        # Save the new video
+        
 
 		# Releasing the VideoCapture object.
         cap.release()
-        out.relase()
+        out.release()
+        
+        # Shorten the video using ffmpeg
+        vid_path, vid_name_ext = os.path.split(my_video.video_path)
+        vid_name, vid_ext = os.path.splitext(vid_name_ext)
+		
+        new_vid_name_ext = vid_name + "_ANALYSIS_VIDEO_C"+vid_ext
+        new_vid_path = os.path.join(vid_path, new_vid_name_ext)
+
+        os.system("ffmpeg -i {} -vcodec libx264 -crf 20 {}".format(my_video.analysed_video_path,new_vid_path))
+        
 		
         # Print the summary
-        print ("Found {} frames in original video".format(self.total_frames))
-        print("Saved analyzed video to: {}".froamt(self.analysed_video_path))
+        print ("Found {} frames in original video".format(my_video.total_frames))
+        print("Saved analyzed video to: {}".format(my_video.analysed_video_path))
 
         
         print("DONE!\nProgram will exit soon.")
