@@ -5,6 +5,7 @@ import logging
 import sys
 import argparse
 import os
+from scipy import ndimage
 
 timestr = time.strftime("%Y%m%d_%H%M%S")
 logging.basicConfig(filename=f"../inputs_outputs/logs/vjump_dataset_creation_log_{timestr}.txt", filemode='a', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
@@ -28,7 +29,7 @@ def check_video_file_open(video_path):
 
 def vjump_create_video_with_critical_frame_identified(argv):
 
-        #  Parse argv to get the video file 
+        #  Parse argv to get the video file
         ap = argparse.ArgumentParser()
         ap.add_argument("--videofile", required=True, help="vjump video file path")
         ap.add_argument("--orient", required=True, help="athlete orientation (left or right)")
@@ -48,34 +49,89 @@ def vjump_create_video_with_critical_frame_identified(argv):
             logging.debug(f"CV2 cannot open this file. Not a valid video file. Exiting..")
             sys.exit(1)
         
-	
+	    
         print("\nStarting Processing.. PLEASE WAIT!\n")
-
+        
+        
         my_video = VJump.VJump(video_path, orientation)
         logging.debug(f"VJump_data object successfully created.")
+        
+        
+        # Start the frame by frame loop
+        
+        ## Creating a VideoCapture object.
+        cap = cv2.VideoCapture(my_video.video_path)
+		
+		# Capturing the fps
+        fps = cap.get(cv2.CAP_PROP_FPS)
+		
+		## Creating an object to write the new video
+        my_video.analysed_video_path = my_video.new_final_vid_name(my_video.video_path)
 
-        logging.debug(f"Starting to count total frames.")
-        my_video.count_and_save_frames()
-        print(f"Total frames in video = {my_video.total_frames}")
-        logging.debug(f"Total frames in video = {my_video.total_frames}")
+		# Getting the video frame width and height.
+        my_video.frame_width = int(cap.get(3))
+        my_video.frame_height = int(cap.get(4))
 
-	# Load the fastai model to detect critical poses 
+		
+        num_frame = 0
+        lbls = []
+        out = None
+		
+		
+		# Load the fastai model
         my_video.fastai('../efficientnet_lite0__v4.2.pkl')
+ 		
 
-        my_video.estimate_key_pose() 
+        while(cap.isOpened()):
 
-        #my_video.create_frame_labels_df()
-	#logging.debug(f"Successfully created df_frame_labels.")
+            # Grabbing each individual frame, frame-by-frame.
+            ret, frame = cap.read()
 
-	#my_video.analyse_vjump_video()
+            if ret==True:
+                num_frame += 1
+                rotated_frame=ndimage.rotate(frame,270)
+                if out is None:
+                    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+                    my_video.analysed_video_path = my_video.new_final_vid_name(my_video.video_path)
+                    (h, w) = rotated_frame.shape[:2]
+                    out = cv2.VideoWriter(my_video.analysed_video_path, fourcc, fps, (w, h))
+                
+                # Detect the pose using fastai model
+                lbl = my_video.fastai.predict(rotated_frame)[0]
+                
+                # Put the Frame number and label on teh frame
+                cv2.putText(rotated_frame, "Fr#: {}, Lbl: {}".format(num_frame, lbl), (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3, lineType=cv2.LINE_AA)
+ 
+                 
+                out.write(rotated_frame)
+				
+                
+                # Create the new video
+                
+                # Exiting if "Q" key is pressed on the keyboard.
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
+            else:
+                break
 
-	#print("Saving data...")
-	#my_video.save_data()
-	#logging.debug(f"Saved all data.")
+        # Save the attributes to VJump object
+        my_video.total_frames = num_frame
+        my_video.labels = lbls
 
-        print("DONE!\nProgram will exit in 10 seconds.")
-        time.sleep(10)
+        # Save the new video
+
+		# Releasing the VideoCapture object.
+        cap.release()
+        out.relase()
+		
+        # Print the summary
+        print ("Found {} frames in original video".format(self.total_frames))
+        print("Saved analyzed video to: {}".froamt(self.analysed_video_path))
+
+        
+        print("DONE!\nProgram will exit soon.")
+        time.sleep(2)
 
 if __name__ == "__main__":
 	
