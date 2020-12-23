@@ -28,6 +28,7 @@ import os
 from scipy import ndimage
 import boto3
 import shutil
+import pandas as pd
 
 
 timestr = time.strftime("%Y%m%d_%H%M%S")
@@ -171,13 +172,61 @@ def vjump_create_video_with_critical_frame_identified(argv):
                 
         
         #Upload analyzed video to S3
-        if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
-            print ("All done.")
-        else:
-            print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
+        #if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
+        #    print ("All done.")
+        #else:
+        #    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
             
+        # Get the actual_pose (ground truth) tagging from the S3 bucket
+        ## Construct the name of the csv file with the tagging
+        actual_pose_filename = vid_name + "_FRAME_LABELS.csv"
+        bucket = 'w-yrs-pose-detect-labels'
         
-        #Download the corresponding CSV file
+        file_download_path = os.path.join(temp_dir, actual_pose_filename)
+        
+        if not gf.download_file_from_s3(bucket,actual_pose_filename, file_download_path):
+            print ("Could not download tag file from S3. Exiting..")
+            sys.exit(1)
+        
+        # Validate and correct the taggings
+        
+        frames, frames_tag_list = gf.validate_tags (file_download_path) #tagging is changed to 'error' if error suspected in frame tagging
+        
+        
+        # Generate the actual_pose vector by frame number
+        num_recs = len(frames)
+        
+        if (num_recs != my_video.total_frames): #something is wrong
+            print ("Number of video frames detected by CV2 do not match the pose tag file. Exiting...")
+            sys.exit(1)
+        
+        
+        #Create the dataframe to upload to DB
+        
+        videofileName = [vid_name_ext for i in range(num_recs)]
+        frame_no = frames
+        model_name = ["fastaipose" for i in range(num_recs)]
+        model_version = ["v1" for i in range(num_recs)]
+        detected_pose = my_video.labels
+        detected_pose_conf = my_video.confs
+        actual_pose = frames_tag_list
+        
+        #create the dataframe
+        df = pd.DataFrame ({'videofilename':videofileName,'frame_no':frame_no, 'model_name':model_name, 'model_version':model_version, 'detected_pose':detected_pose,'detected_pose_conf':detected_pose_conf, 'actual_pose':actual_pose})
+        
+        
+        #Save the new file in the temp location
+        file_path, file_name_ext = os.path.split(file_download_path)
+        file_name, file_ext = os.path.splitext(file_name_ext)
+        new_file_name_ext = file_name + "_T"+ file_ext
+        new_file_path = os.path.join(file_path, new_file_name_ext)
+        
+        df.to_csv(new_file_path, index=False)
+        
+        # Upload the new file to ESQL database
+        
+        
+        
         
         #upload_frames_to_db(new_vid_name_ext, frames, my_video.labels)
 

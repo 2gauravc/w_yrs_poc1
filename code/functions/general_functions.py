@@ -13,6 +13,7 @@ import os
 from scipy import ndimage
 import boto3
 import shutil
+import pandas as pd
 
 
 def check_video_file_open(video_path):
@@ -63,6 +64,27 @@ def download_file_from_s3(bucket,s3_file, local_file_path):
 def compress_video_ffmpeg(old_video_path, new_video_path):
     k = os.system("ffmpeg -i {} -vcodec libx264 -crf 20 {}".format(old_video_path,new_video_path))
     return k
+    
+def convert_wide_tags_to_col(tag_row):
+    if ((tag_row.squat+tag_row.jump_peak+tag_row.landing) > 1):
+        return "err"
+    elif (tag_row.squat == 1 ):
+        return "squat"
+    elif (tag_row.jump_peak == 1):
+        return "jump_peak"
+    elif (tag_row.landing == 1):
+        return "landing"
+    else:
+        return "transition"
+            
+    
+def validate_tags(file):
+    df = pd.read_csv(file)
+    frames = df.frames
+    frames_tag_list = df.apply(lambda row: convert_wide_tags_to_col(row) ,axis=1)
+    return frames, frames_tag_list
+    
+
     
     
 
