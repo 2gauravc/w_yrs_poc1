@@ -86,5 +86,15 @@ def parse_tags(file):
     
 
     
+def remove_temp_files(files_list):
+    num_remove = 0
+    for file in files_list:
+        if os.path.exists(file):
+            os.remove(file)
+            num_remove+=1
+        else:
+            print("The file {} does not exist".format(file))
     
+    return num_remove
+        
 

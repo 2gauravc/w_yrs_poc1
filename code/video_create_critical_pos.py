@@ -53,6 +53,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
         video_file = args["file"]
         rotate = int(args["rotate"])
         
+        files_written=[]
+        
         
         #Step1. Download video file from S3
         #-------------------------------------------------------------------------------------------
@@ -66,6 +68,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
         if not gf.download_file_from_s3(bucket,video_file, video_download_path):
             print ("Could not download file from S3. Exiting..")
             sys.exit(1)
+        
+        files_written.append(video_download_path)
         
         # Check if this is a valid video file and cv2 can open it
         if not gf.check_video_file_open(video_download_path):
@@ -180,7 +184,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
         if ret_val != 0:
             print ("Video Compression failed. Continuing with original video")
             shutil.copyfile(my_video.analysed_video_path, new_vid_path)
-            
+        
+        files_written.append(new_vid_path)
         
         my_video.analysed_compressed_video_path = new_vid_path
                 
@@ -188,10 +193,10 @@ def vjump_create_video_with_critical_frame_identified(argv):
         #Step 5. Upload analyzed video to S3
         #-----------------------------------------------------------------------------
         print("Starting Step 5.\n")
-        #if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
-        #    print ("All done.")
-        #else:
-        #    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
+        if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
+            print ("All done.")
+        else:
+            print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
             
         # Step 6. Download the actual pose (ground truth) tagging from the S3 bucket
         #--------------------------------------------------------------------------
@@ -206,6 +211,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
         if not gf.download_file_from_s3(bucket,actual_pose_filename, file_download_path):
             print ("Could not download tag file from S3. Exiting..")
             sys.exit(1)
+        
+        files_written.append(file_download_path)
         
         # Step 7. Parse the taggings (and note errors if any)
         #------------------------------------------------------------------------
@@ -246,7 +253,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         df.to_csv(new_file_path, index=False, header=False)
         
-        
+        files_written.append(new_file_path)
         
         #Step 10. Upload the csv file to ESQL DB
         #------------------------------------------------------------------------------------
@@ -257,7 +264,12 @@ def vjump_create_video_with_critical_frame_identified(argv):
         db.report_table_recs([])
         
         db.upload_csv_to_db(new_file_path, db_table)
-
+        
+        
+        #Step 11. Clean-up (remove temp files etc.)
+        print("Starting Step 11.\n")
+        num_removed = gf.remove_temp_files(files_written)
+        print("{} files removed".format(num_removed))
             
 if __name__ == "__main__":
 	
