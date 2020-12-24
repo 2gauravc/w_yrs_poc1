@@ -3,12 +3,18 @@
 #About this pipeline
 #Input: Takes in a video from the s3 bucket w-yrs-input-video
 #
-#Processing:
-#1.Uses the fastai model to detect the critical pose in each frame
-#2.Writes frame # and detected pose (e.g. Squat) on each frame
-#3.Produces an output video in ./tmp folder (x_ANALYSIS_VIDEO)
-#4 Compress the video using ffmpeg and saves it to ./tmp (x_ANALYSIS.mp4)
-#5.Save the video onto S3 bucket
+#Processing: in the follwoing steps
+#1. Download the video from S3 bucket (input videos)
+#2. Validate and open the file frame by frame (using CV2))
+#3. Detect the critical pose using fastAI model and post-process (Writes frame # and detected pose)
+#4. Compress the video using ffmpeg and saves it to ./tmp (x_ANALYSIS.mp4)
+#5. Upload the analyzed video onto S3 bucket
+#6. Download the actual tagging file from S3 bucket
+#7. Parse the taggings (and note errors if any)
+#8. Create a dataframe (row = frame) with actual and detected pose tagging
+#9. Save the new dataframe as a csv on disk
+#10.Upload the csv file to ESQL DB
+
 #
 #Output:
 #1. Places a processed mp4 video in bucket w-yrs-processed-video (x_ANALYSIS.mp4)
@@ -18,6 +24,7 @@
 
 from VJump import VJump
 from functions import general_functions as gf
+from functions import db_functions as db
 
 import cv2
 import time
@@ -47,8 +54,9 @@ def vjump_create_video_with_critical_frame_identified(argv):
         rotate = int(args["rotate"])
         
         
-        #Download video file from S3 to ./tmp/
-    
+        #Step1. Download video file from S3
+        #-------------------------------------------------------------------------------------------
+        print("Starting Step 1.\n")
         temp_dir = './tmp/'
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
@@ -66,14 +74,16 @@ def vjump_create_video_with_critical_frame_identified(argv):
             sys.exit(1)
         
 	    
-        print("\nStarting Processing.. PLEASE WAIT!\n")
+	    # Step 2. Validate and open the file frame by frame
+	    #----------------------------------------------------------------------
+	    
+        print("Starting Step 2.\n")
         
         orientation = 'left' ## This is redundant
         my_video = VJump.VJump(video_download_path, orientation)
         logging.debug(f"VJump_data object successfully created.")
         
     
-        
         ## Creating a VideoCapture object.
         cap = cv2.VideoCapture(my_video.video_path)
 		
@@ -99,6 +109,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
  		
         # Start the frame by frame loop
         
+        print("Starting Step 3.\n")
+        
         while(cap.isOpened()):
 
             # Grabbing each individual frame, frame-by-frame.
@@ -116,7 +128,8 @@ def vjump_create_video_with_critical_frame_identified(argv):
                     (h, w) = rotated_frame.shape[:2]
                     out = cv2.VideoWriter(my_video.analysed_video_path, fourcc, fps, (w, h))
                 
-                # Detect the pose using fastai model
+                # Step3. Detect the critical pose using fastai model and postprocess
+                #----------------------------------------------------------------------
                 pred = my_video.fastai.predict(rotated_frame)
                 label_idx = int(pred[1].numpy())
                 conf = round(pred[2].numpy()[label_idx].item(),2)
@@ -152,8 +165,9 @@ def vjump_create_video_with_critical_frame_identified(argv):
         cap.release()
         out.release()
         
-        # Compress the video using ffmpeg
-        
+        #Step 4. Compress the video using ffmpeg
+        #------------------------------------------------------------------------
+        print("Starting Step 4.\n")
         vid_path, vid_name_ext = os.path.split(my_video.video_path)
         vid_name, vid_ext = os.path.splitext(vid_name_ext)
 		
@@ -171,14 +185,19 @@ def vjump_create_video_with_critical_frame_identified(argv):
         my_video.analysed_compressed_video_path = new_vid_path
                 
         
-        #Upload analyzed video to S3
+        #Step 5. Upload analyzed video to S3
+        #-----------------------------------------------------------------------------
+        print("Starting Step 5.\n")
         #if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
         #    print ("All done.")
         #else:
         #    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
             
-        # Get the actual_pose (ground truth) tagging from the S3 bucket
+        # Step 6. Download the actual pose (ground truth) tagging from the S3 bucket
+        #--------------------------------------------------------------------------
+        print("Starting Step 6.\n")
         ## Construct the name of the csv file with the tagging
+        
         actual_pose_filename = vid_name + "_FRAME_LABELS.csv"
         bucket = 'w-yrs-pose-detect-labels'
         
@@ -188,9 +207,10 @@ def vjump_create_video_with_critical_frame_identified(argv):
             print ("Could not download tag file from S3. Exiting..")
             sys.exit(1)
         
-        # Validate and correct the taggings
-        
-        frames, frames_tag_list = gf.validate_tags (file_download_path) #tagging is changed to 'error' if error suspected in frame tagging
+        # Step 7. Parse the taggings (and note errors if any)
+        #------------------------------------------------------------------------
+        print("Starting Step 7.\n")
+        frames, frames_tag_list = gf.parse_tags (file_download_path) #tagging is changed to 'error' if error suspected in frame tagging
         
         
         # Generate the actual_pose vector by frame number
@@ -201,8 +221,9 @@ def vjump_create_video_with_critical_frame_identified(argv):
             sys.exit(1)
         
         
-        #Create the dataframe to upload to DB
-        
+        # Step 8. Create a dataframe (row = frame) with actual and detected pose tagging
+        #---------------------------------------------------------------------------------
+        print("Starting Step 8.\n")
         videofileName = [vid_name_ext for i in range(num_recs)]
         frame_no = frames
         model_name = ["fastaipose" for i in range(num_recs)]
@@ -211,24 +232,31 @@ def vjump_create_video_with_critical_frame_identified(argv):
         detected_pose_conf = my_video.confs
         actual_pose = frames_tag_list
         
-        #create the dataframe
+        
         df = pd.DataFrame ({'videofilename':videofileName,'frame_no':frame_no, 'model_name':model_name, 'model_version':model_version, 'detected_pose':detected_pose,'detected_pose_conf':detected_pose_conf, 'actual_pose':actual_pose})
         
         
-        #Save the new file in the temp location
+        # Step 9. Save the new dataframe as a csv on disk
+        #------------------------------------------------------------------------------------
+        print("Starting Step 9.\n")
         file_path, file_name_ext = os.path.split(file_download_path)
         file_name, file_ext = os.path.splitext(file_name_ext)
         new_file_name_ext = file_name + "_T"+ file_ext
         new_file_path = os.path.join(file_path, new_file_name_ext)
         
-        df.to_csv(new_file_path, index=False)
-        
-        # Upload the new file to ESQL database
+        df.to_csv(new_file_path, index=False, header=False)
         
         
         
+        #Step 10. Upload the csv file to ESQL DB
+        #------------------------------------------------------------------------------------
+        print("Starting Step 10.\n")
         
-        #upload_frames_to_db(new_vid_name_ext, frames, my_video.labels)
+        db_table = 'video_frame_vjump_pose'
+        #Check the number of records in the table
+        db.report_table_recs([])
+        
+        db.upload_csv_to_db(new_file_path, db_table)
 
             
 if __name__ == "__main__":

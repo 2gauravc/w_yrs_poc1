@@ -11,7 +11,7 @@ import sys
 import argparse
 import os
 from scipy import ndimage
-import boto3
+import boto3, botocore
 import shutil
 import pandas as pd
 
@@ -52,12 +52,12 @@ def download_file_from_s3(bucket,s3_file, local_file_path):
 
     try:
         s3.Bucket(bucket).download_file(s3_file, local_file_path)
-        print("Download Successful")
+        print("Download of file {} is successful. File downloaded to {}".format(s3_file, local_file_path))
         return True
     except FileNotFoundError:
         print("The file was not found")
         return False
-    except ClientError as e:
+    except botocore.exceptions.ClientError as e:
         print("Error")
         return False
 
@@ -78,7 +78,7 @@ def convert_wide_tags_to_col(tag_row):
         return "transition"
             
     
-def validate_tags(file):
+def parse_tags(file):
     df = pd.read_csv(file)
     frames = df.frames
     frames_tag_list = df.apply(lambda row: convert_wide_tags_to_col(row) ,axis=1)
