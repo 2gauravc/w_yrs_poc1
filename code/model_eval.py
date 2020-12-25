@@ -14,8 +14,8 @@ df = pd.read_csv('./tmp/model_result.csv')
 
 temp_dir = './tmp'
 filename1 = 'model_eval' + datetime.now().strftime("%Y%m%d-%H%M") +'.txt'
-print_file = os.path.join(temp_dir, filename1)
-print_file = open(print_file, "w")
+print_file_name = os.path.join(temp_dir, filename1)
+print_file = open(print_file_name, "w")
 
 # Confusion matrix
 print ("Confusion Matrix", file=print_file)
@@ -31,6 +31,14 @@ class_report = classification_report(df.actual_pose, df.detected_pose, digits=2,
 print (class_report , file=print_file)
 print ("\n" , file=print_file)
 
+# Close the file
+print_file.close()
 
+# put the model evaluation file on S3
+
+if gf.upload_file_to_s3(print_file_name, 'w-yrs-model-metrics', filename1):
+    print ("All done.")
+else:
+    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
 
 
