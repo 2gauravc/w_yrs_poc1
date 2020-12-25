@@ -58,7 +58,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step1. Download video file from S3
         #-------------------------------------------------------------------------------------------
-        print("Starting Step 1.\n")
+        print("Starting Step 1. Download video file from S3\n")
         temp_dir = './tmp/'
         if not os.path.exists(temp_dir):
             os.makedirs(temp_dir)
@@ -81,7 +81,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
 	    # Step 2. Validate and open the file frame by frame
 	    #----------------------------------------------------------------------
 	    
-        print("Starting Step 2.\n")
+        print("Starting Step 2. Validate and open the file frame by frame\n")
         
         orientation = 'left' ## This is redundant
         my_video = VJump.VJump(video_download_path, orientation)
@@ -113,7 +113,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
  		
         # Start the frame by frame loop
         
-        print("Starting Step 3.\n")
+        print("Starting Step 3. Detect the critical pose \n")
         
         while(cap.isOpened()):
 
@@ -171,7 +171,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step 4. Compress the video using ffmpeg
         #------------------------------------------------------------------------
-        print("Starting Step 4.\n")
+        print("Starting Step 4. Compress the video using ffmpeg\n")
         vid_path, vid_name_ext = os.path.split(my_video.video_path)
         vid_name, vid_ext = os.path.splitext(vid_name_ext)
 		
@@ -192,7 +192,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step 5. Upload analyzed video to S3
         #-----------------------------------------------------------------------------
-        print("Starting Step 5.\n")
+        print("Starting Step 5. Upload analyzed video to S3\n")
         if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
             print ("All done.")
         else:
@@ -200,7 +200,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
             
         # Step 6. Download the actual pose (ground truth) tagging from the S3 bucket
         #--------------------------------------------------------------------------
-        print("Starting Step 6.\n")
+        print("Starting Step 6. Download the actual pose (ground truth) tagging from the S3 bucket\n")
         ## Construct the name of the csv file with the tagging
         
         actual_pose_filename = vid_name + "_FRAME_LABELS.csv"
@@ -216,7 +216,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         # Step 7. Parse the taggings (and note errors if any)
         #------------------------------------------------------------------------
-        print("Starting Step 7.\n")
+        print("Starting Step 7. Parse the taggings (and note errors if any)\n")
         frames, frames_tag_list = gf.parse_tags (file_download_path) #tagging is changed to 'error' if error suspected in frame tagging
         
         
@@ -230,7 +230,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         # Step 8. Create a dataframe (row = frame) with actual and detected pose tagging
         #---------------------------------------------------------------------------------
-        print("Starting Step 8.\n")
+        print("Starting Step 8. Parse the taggings (and note errors if any)\n")
         videofileName = [vid_name_ext for i in range(num_recs)]
         frame_no = frames
         model_name = ["fastaipose" for i in range(num_recs)]
@@ -245,7 +245,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         # Step 9. Save the new dataframe as a csv on disk
         #------------------------------------------------------------------------------------
-        print("Starting Step 9.\n")
+        print("Starting Step 9. Save the new dataframe as a csv on disk\n")
         file_path, file_name_ext = os.path.split(file_download_path)
         file_name, file_ext = os.path.splitext(file_name_ext)
         new_file_name_ext = file_name + "_T"+ file_ext
@@ -257,7 +257,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step 10. Upload the csv file to ESQL DB
         #------------------------------------------------------------------------------------
-        print("Starting Step 10.\n")
+        print("Starting Step 10. Upload the csv file to ESQL DB\n")
         
         db_table = 'video_frame_vjump_pose'
         #Check the number of records in the table
@@ -267,7 +267,7 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         
         #Step 11. Clean-up (remove temp files etc.)
-        print("Starting Step 11.\n")
+        print("Starting Step 11. Clean-up (remove temp files etc.)\n")
         num_removed = gf.remove_temp_files(files_written)
         print("{} files removed".format(num_removed))
             

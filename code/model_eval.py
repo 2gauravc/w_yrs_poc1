@@ -31,14 +31,34 @@ class_report = classification_report(df.actual_pose, df.detected_pose, digits=2,
 print (class_report , file=print_file)
 print ("\n" , file=print_file)
 
+
+df_70 = df.loc[df.detected_pose_conf > 0.7]
+
+# Classification Report for confidence > 70%
+print ("Classification Report for confidence > 70%", file=print_file)
+print("--------------------------------------------------" , file=print_file)
+class_report = classification_report(df_70.actual_pose, df_70.detected_pose, digits=2, output_dict = False)
+print (class_report , file=print_file)
+print ("\n" , file=print_file)
+
+df_90 = df.loc[df.detected_pose_conf > 0.9]
+
+# Classification Report for confidence > 90%
+print ("Classification Report for confidence > 90%", file=print_file)
+print("--------------------------------------------------" , file=print_file)
+class_report = classification_report(df_90.actual_pose, df_90.detected_pose, digits=2, output_dict = False)
+print (class_report , file=print_file)
+print ("\n" , file=print_file)
+
+
 # Close the file
 print_file.close()
 
 # put the model evaluation file on S3
 
-if gf.upload_file_to_s3(print_file_name, 'w-yrs-model-metrics', filename1):
-    print ("All done.")
-else:
-    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
+#if gf.upload_file_to_s3(print_file_name, 'w-yrs-model-metrics', filename1):
+#    print ("All done.")
+#else:
+#    print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
 
 
