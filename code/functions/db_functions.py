@@ -1,6 +1,8 @@
 import psycopg2
 from functions import db_config
 import sys, getopt
+import pandas as pd
+import pandas.io.sql as sqlio
 
 def connect_db():
     """ Connect to the PostgreSQL database server """
@@ -167,6 +169,39 @@ def upload_csv_to_db(file_path, db_table):
     print('\t Committed data into table: {}'.format(db_table))
         
     con.close()
+
+
+def execute_sql_on_db():
+    con = connect_db()
+    cur = con.cursor()
+    
+    sql = "select * from video_frame_vjump_pose;"
+    cur.execute(sql)
+    
+    records = cur.fetchall()
+    
+    videofileName = []
+    frame_no = []
+    model_name = []
+    model_version =  []
+    detected_pose = []
+    detected_pose_conf = []
+    actual_pose = []
+    
+    for record in records:
+        videofileName.append(record[0])
+        frame_no.append(record[1])
+        model_name.append(record[2])
+        model_version.append(record[3])
+        detected_pose.append(record[4])
+        detected_pose_conf.append(record[5])
+        actual_pose.append(record[6])
+        
+        df = pd.DataFrame ({'videofilename':videofileName,'frame_no':frame_no, 'model_name':model_name, 'model_version':model_version, 'detected_pose':detected_pose,'detected_pose_conf':detected_pose_conf, 'actual_pose':actual_pose})
+    
+    print("Found {} records in database".format(df.shape[0]))
+    return df
+    
 
 
 if __name__ == "__main__":
