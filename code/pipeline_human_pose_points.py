@@ -18,6 +18,7 @@ from functions import db_functions as db
 import tflite_runtime.interpreter as tflite
 from PIL import Image
 import numpy as np
+import cv2
 
 
 import sys, os, argparse
@@ -45,12 +46,67 @@ def parse_pose_output(heatmap_data,offset_data, threshold):
       pose_kps[i,0] = int(remap_pos[0] + offset_data[max_val_pos[0],max_val_pos[1],i])
       pose_kps[i,1] = int(remap_pos[1] + offset_data[max_val_pos[0],max_val_pos[1],i+joint_num])
       max_prob = np.max(joint_heatmap)
-
       if max_prob > threshold:
-        if pose_kps[i,0] < 257 and pose_kps[i,1] < 257:
-          pose_kps[i,2] = 1
+          if pose_kps[i,0] < 257 and pose_kps[i,1] < 257:
+              pose_kps[i,2] = 1
 
   return pose_kps
+
+def draw_kps(show_img,kps, ratio=None):
+    for i in range(5,kps.shape[0]):
+      if kps[i,2]:
+        if isinstance(ratio, tuple):
+          cv2.circle(show_img,(int(round(kps[i,1]*ratio[1])),int(round(kps[i,0]*ratio[0]))),2,(0,255,255),round(int(1*ratio[1])))
+          continue
+        cv2.circle(show_img,(kps[i,1],kps[i,0]),2,(0,255,255),-1)
+    return show_img
+    
+def get_pose_points_tf(model_path, image_path):
+
+    tflite_interpreter = tflite.Interpreter(model_path=model_path)
+    tflite_interpreter.allocate_tensors()
+
+    # Get input and output tensors.
+    input_details = tflite_interpreter.get_input_details()
+    output_details = tflite_interpreter.get_output_details()
+    
+    #print("Type of input:", input_details[0]['dtype'])
+    
+    # NxHxWxC, H:1, W:2
+    height = input_details[0]['shape'][1]
+    width = input_details[0]['shape'][2]
+    
+    #print("Height {}, Width {}".format(height, width))
+    img = Image.open(image_path).resize((width, height))
+    
+    # add N dim
+    input_data = np.expand_dims(img, axis=0)
+    
+    input_mean = 127.5
+    input_std = 127.5
+    
+    input_data = (np.float32(input_data) - input_mean) / input_std
+    tflite_interpreter.set_tensor(input_details[0]['index'], input_data)
+
+    #start_time = time.time()
+    tflite_interpreter.invoke()
+    #stop_time = time.time()
+
+    output_data = tflite_interpreter.get_tensor(output_details[0]['index'])
+    offset_data = tflite_interpreter.get_tensor(output_details[1]['index'])
+    
+    # Getting rid of the extra dimension
+    template_heatmaps = np.squeeze(output_data)
+    template_offsets = np.squeeze(offset_data)
+    
+    template_kps = parse_pose_output(template_heatmaps,template_offsets,0.3)
+    
+    template_show = np.squeeze((input_data.copy()*127.5+127.5)/255.0)
+    template_show = np.array(template_show*255,np.uint8)
+
+    return(tempalte_kps, template_show)
+
+
 
 def main_human_pose_pipeline(argv):
     #  Parse argv to get the video file and the rotate angle (if needed)
@@ -99,48 +155,16 @@ def main_human_pose_pipeline(argv):
         print ("Could not download model file from S3. Exiting..")
         sys.exit(1)
 
-    tflite_interpreter = tflite.Interpreter(model_path=model_download_path)
-    tflite_interpreter.allocate_tensors()
-
-    # Get input and output tensors.
-    input_details = tflite_interpreter.get_input_details()
-    output_details = tflite_interpreter.get_output_details()
+    image_path = './tmp/IMG_3770_FRAME_65.png'
+    kps, template_show = get_pose_points_tf(model_download_path, image_path)
     
-    #print("Type of input:", input_details[0]['dtype'])
-    
-    # NxHxWxC, H:1, W:2
-    height = input_details[0]['shape'][1]
-    width = input_details[0]['shape'][2]
-    
-    print("Height {}, Width {}".format(height, width))
-    img = Image.open('./tmp/IMG_3770_FRAME_65.png').resize((width, height))
-    
-    # add N dim
-    input_data = np.expand_dims(img, axis=0)
-    
-    input_mean = 127.5
-    input_std = 127.5
-    
-    input_data = (np.float32(input_data) - input_mean) / input_std
-    tflite_interpreter.set_tensor(input_details[0]['index'], input_data)
-
-    #start_time = time.time()
-    tflite_interpreter.invoke()
-    #stop_time = time.time()
-
-    output_data = tflite_interpreter.get_tensor(output_details[0]['index'])
-    offset_data = tflite_interpreter.get_tensor(output_details[1]['index'])
-    
-    # Getting rid of the extra dimension
-    template_heatmaps = np.squeeze(output_data)
-    template_offsets = np.squeeze(offset_data)
-    
-    print("template_heatmaps' shape:", template_heatmaps.shape)
-    print("template_offsets' shape:", template_offsets.shape)
-    
-    template_kps = parse_pose_output(template_heatmaps,template_offsets,0.3)
-    
+    print("Keypoints ")
     print(template_kps)
+    
+    
+    img_pose = draw_kps(template_show.copy(),kps)
+    
+    cv2.imwrite('./tmp/IMG_3770_FRAME_65_POSE.png', img_pose)
 
 
 if __name__ == "__main__":
