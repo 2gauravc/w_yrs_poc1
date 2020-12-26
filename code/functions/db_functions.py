@@ -201,6 +201,27 @@ def execute_sql_on_db():
     
     print("Found {} records in database".format(df.shape[0]))
     return df
+  
+def get_critical_frames(video_file, model_name, model_version, conf_threshold):
+    con = connect_db()
+    cur = con.cursor()
+    
+    sql = "select frame_no, detected_pose from video_frame_vjump_pose where videofilename= '{}' AND model_name = '{}' AND model_version = '{}' AND detected_pose_conf > {};".format(video_file, model_name,  model_version, conf_threshold)
+    cur.execute(sql)
+    
+    records = cur.fetchall()
+    frame_no = []
+    detected_pose = []
+    detected_pose_conf = []
+    
+    for record in records:
+        frame_no.append(record[0])
+        detected_pose.append(record[1])
+
+        df = pd.DataFrame ({'frame_no':frame_no, 'detected_pose':detected_pose})
+    
+    print("Found {} records in database".format(df.shape[0]))
+    return df
     
 
 
