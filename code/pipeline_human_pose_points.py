@@ -28,9 +28,11 @@ def main_human_pose_pipeline(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", required=True, help="video file to download and process")
     ap.add_argument("--rotate", required=True, help="degrees to rotate the image extracted from video")
+    ap.add_argument('-w', '--write', action='store_true', help="write video output to S3")
     args = vars(ap.parse_args())
     video_file = args["file"]
     rotate = int(args["rotate"])
+    wr_s3 = args["write"]
 
     vid_name, vid_ext = os.path.splitext(video_file)
     
@@ -78,6 +80,7 @@ def main_human_pose_pipeline(argv):
     frame_nos = []
     std_kps = []
     kps = []
+    out = None
     
     start = time.time()
     
@@ -109,11 +112,28 @@ def main_human_pose_pipeline(argv):
             #    print("KP for Frame no. {}".format(num_frame))
             #    print(kp)
             
+            #write to S3 if needed
+            if wr_s3:
+                pose_img = tf.draw_kps(image_show.copy(),kp)
+                if out is None:
+                    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+                    analysed_video_path = os.path.join(temp_dir, vid_name+"_POSE_POINTS.mp4")
+                    (h, w) = pose_img.shape[:2]
+                    out = cv2.VideoWriter(analysed_video_path, fourcc, fps, (w, h))
+                
+                
+                out.write(pose_img)
+                 
+            
             # Delete the temp image file
             if os.path.exists(temp_image_path):
                 os.remove(temp_image_path)
         else:
             break
+    
+    cap.release()
+    if out is not None:
+        out.release()
     
     end = time.time()
     total_frames = num_frame
