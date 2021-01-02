@@ -8,12 +8,12 @@
 #2. Validate and open the file frame by frame (using CV2))
 #3. Detect the critical pose using fastAI model and post-process (Writes frame # and detected pose)
 #4. Compress the video using ffmpeg and saves it to ./tmp (x_ANALYSIS.mp4)
-#5. Upload the analyzed video onto S3 bucket
+#5. Upload the analyzed video onto S3 bucket (option -o: this action is done only when '-o' option is used)
 #6. Download the actual tagging file from S3 bucket
 #7. Parse the taggings (and note errors if any)
 #8. Create a dataframe (row = frame) with actual and detected pose tagging
 #9. Save the new dataframe as a csv on disk
-#10.Upload the csv file to ESQL DB
+#10.Upload the csv file to ESQL DB (option -d: this action is done only when '-d' option is used)
 
 #
 #Output:
@@ -49,9 +49,13 @@ def vjump_create_video_with_critical_frame_identified(argv):
         ap = argparse.ArgumentParser()
         ap.add_argument("--file", required=True, help="video file to download and process")
         ap.add_argument("--rotate", required=True, help="athlete orientation (left or right)")
+        ap.add_argument('-o', '--out', action='store_true', help="write video output to S3")
+        ap.add_argument('-d', '--dbwrite', action='store_true', help="write critical pose output to DB")
         args = vars(ap.parse_args())
         video_file = args["file"]
         rotate = int(args["rotate"])
+        wr_s3 = args["out"]
+        wr_db = args["dbwrite"]
         
         files_written=[]
         
@@ -192,11 +196,14 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step 5. Upload analyzed video to S3
         #-----------------------------------------------------------------------------
-        print("Starting Step 5. Upload analyzed video to S3\n")
-        if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', new_vid_name_ext):
-            print ("All done.")
+        if wr_s3:
+            print("Starting Step 5. Upload analyzed video to S3\n")
+            if gf.upload_file_to_s3(my_video.analysed_compressed_video_path, 'w-yrs-processed-video', 'critical_pose/'+new_vid_name_ext):
+                print ("All done.")
+            else:
+                print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
         else:
-            print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(my_video.analysed_video_path))
+            print("Skipping Step 5. Upload analyzed video to S3\n")
             
         # Step 6. Download the actual pose (ground truth) tagging from the S3 bucket
         #--------------------------------------------------------------------------
@@ -257,14 +264,15 @@ def vjump_create_video_with_critical_frame_identified(argv):
         
         #Step 10. Upload the csv file to ESQL DB
         #------------------------------------------------------------------------------------
-        print("Starting Step 10. Upload the csv file to ESQL DB\n")
-        
-        db_table = 'video_frame_vjump_pose'
-        #Check the number of records in the table
-        db.report_table_recs([])
-        
-        db.upload_csv_to_db(new_file_path, db_table)
-        
+        if wr_db:
+            print("Starting Step 10. Upload the csv file to ESQL DB\n")
+            db_table = 'video_frame_vjump_pose'
+            #Check the number of records in the table
+            db.report_table_recs([])
+            db.upload_csv_to_db(new_file_path, db_table)
+        else:
+            print("Skipping Step 10. Upload the csv file to ESQL DB\n")
+
         
         #Step 11. Clean-up (remove temp files etc.)
         print("Starting Step 11. Clean-up (remove temp files etc.)\n")
