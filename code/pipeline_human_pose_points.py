@@ -7,7 +7,8 @@
 #  1. Download the video file from S3
 #  2. Download the pose point detection model from S3
 #  3. Perform pose point detection on all the frames (one by one)
-#  4. Upload the detected pose points to ESQL DB (video_pose_proc_summary, video_pose_proc_details)
+#  4. Upload the detected pose points to ESQL DB (video_pose_proc_summary, video_pose_proc_details) (option -d: this action is done only when the '-d' option is used)
+#  5. Upload the pose point tagged video onto S3 (option -o: this action is done only when the '-o' option is used)
 
 from functions import general_functions as gf
 from functions import db_functions as db
@@ -28,11 +29,13 @@ def main_human_pose_pipeline(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--file", required=True, help="video file to download and process")
     ap.add_argument("--rotate", required=True, help="degrees to rotate the image extracted from video")
-    ap.add_argument('-w', '--write', action='store_true', help="write video output to S3")
+    ap.add_argument('-o', '--out', action='store_true', help="write video output to S3")
+    ap.add_argument('-d', '--dbwrite', action='store_true', help="write critical pose output to DB")
     args = vars(ap.parse_args())
     video_file = args["file"]
     rotate = int(args["rotate"])
-    wr_s3 = args["write"]
+    wr_s3 = args["out"]
+    wr_db = args["dbwrite"]
 
     vid_name, vid_ext = os.path.splitext(video_file)
     
@@ -152,18 +155,6 @@ def main_human_pose_pipeline(argv):
     FPS = total_frames / total_processing_time_secs
     processed_on = time_now
     
-    # Write the video_pose_proc_summary dataset to ESQL DB
-    con = db.connect_db()
-    cur = con.cursor()
-
-    postgres_insert_query = """ INSERT INTO video_pose_proc_summary (video_file_name, model_name, model_version, total_frames, total_processing_time_secs, FPS) VALUES (%s,%s,%s,%s, %s, %s)"""
-    record_to_insert = (video_file_name, model_name,model_version, total_frames,total_processing_time_secs, FPS)
-    cur.execute(postgres_insert_query, record_to_insert)
-    con.commit()
-
-    count = cur.rowcount
-    print (count, "Record inserted successfully into video_pose_proc_summary table")
-    con.close()
     
     df_pose = tf.create_pose_points_df(video_file_name, total_frames, frame_nos,model_name, model_version, kps)
     #print (df_pose)
@@ -177,14 +168,44 @@ def main_human_pose_pipeline(argv):
     #print(df_pose.columns)
     
     #Step: 4. Upload the detected pose points to ESQL DB (video_pose_proc_details)
-    print("Starting Step 4. Upload the detected pose points to ESQL DB\n")
-    db_table = 'video_pose_proc_details'
+    if wr_db:
+        print("Starting Step 4. Upload the detected pose points to ESQL DB\n")
+        
+        # Write the video_pose_proc_summary dataset to ESQL DB
+        con = db.connect_db()
+        cur = con.cursor()
+
+        postgres_insert_query = """ INSERT INTO video_pose_proc_summary (video_file_name, model_name, model_version, total_frames, total_processing_time_secs, FPS) VALUES (%s,%s,%s,%s, %s, %s)"""
+        record_to_insert = (video_file_name, model_name,model_version, total_frames,total_processing_time_secs, FPS)
+        cur.execute(postgres_insert_query, record_to_insert)
+        con.commit()
+
+        count = cur.rowcount
+        print (count, "Record inserted successfully into video_pose_proc_summary table")
+        con.close()
+
+        db_table = 'video_pose_proc_details'
+        #Check the number of records in the table
+        db.report_table_recs([db_table])
+        db.upload_csv_to_db(df_pose_path, db_table)
+        db.report_table_recs([db_table])
+
+    else:
+        print("Skipping Step 4. Upload the detected pose points to ESQL DB\n")
+
     
-    #Check the number of records in the table
-    db.report_table_recs([db_table])
-    db.upload_csv_to_db(df_pose_path, db_table)
-    db.report_table_recs([db_table])
     
+    
+    # Step 5: Upload the pose point tagged video onto S3
+    
+    if wr_s3:
+        print("Starting Step 5. Upload analyzed video to S3\n")
+        if gf.upload_file_to_s3(analysed_video_path, 'w-yrs-processed-video', 'human_pose/'+vid_name+"_ANALYSIS.mp4"):
+            print ("All done.")
+        else:
+            print ("Could not upload analyzed video to S3. Saved analyzed video to: {}".format(analysed_video_path))
+    else:
+        print("Skipping Step 5. Upload analyzed video to S3\n")
     
 
 if __name__ == "__main__":
