@@ -2,11 +2,13 @@
 
 This project applies human pose detection and machine learning to help kids practise Fundamental Movement Skills (FMS). FMS is a set of structured movements (like vertical jump). Proficiency in these fundamental movements will help kids improve athletic performance in a wide range of activities. 
 
-In this PoC, we will use machine learning to detect frames 2 key states in a vertical jump - squat and jump peak. The next step to evaluate the kids performance using standard FMS criteria for squat and jump peak. 
+In this PoC, we will use machine learning to detect frames with the kid in 2 key states in a vertical jump - squat and jump peak. 
+
+The next step will be to evaluate the kids performance using standard FMS criteria for squat and jump peak. 
 
 ## Model Training: 
 
-Trained model using 2000 images of vertical jumps. Images were tagged as squat, jump peak or transition 9anything in between). 
+Trained model using 2000 images of vertical jumps. Images were tagged as squat, jump peak or transition (anything in between). 
 
 ## Result: 
 Model has 70% accuracy on test set. Some samples below. The mlde detects the squat and jump_peak frame. 
